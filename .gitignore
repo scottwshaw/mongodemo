@@ -1,0 +1,8 @@
+lib/
+*~
+*#
+.DS_Store
+.#*
+classes/
+simian_report.js
+tmp/
