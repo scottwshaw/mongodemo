@@ -27,12 +27,22 @@
 (defn color-mix-50-50 [color]
   (rand-nth [color (rand-nth colors)]))
 
+;;; ncolors/total = mix, ncolors = (nsame + ncolors)*mix
+;;; nsame*mix = ncolors - ncolors*mix, nsame = ncolors*(1-mix)/mix
+
+(defn color-mix
+  "mix must be a number between 0 and 1, ncolors/total = mix"
+  [main-color mix]
+  (let [ncolors (count colors)
+        nsame (int (/ (* ncolors (- 1.0 mix)) mix))]
+    (rand-nth (concat (repeat nsame main-color) colors))))
+
 (defn random-coordinated-outfit []
   (let [size (rand-nth sizes)
         main-color (rand-nth [:red :blue :white :orange :green :black])]
-    [(tshirt size (color-mix-50-50 main-color) (rand-nth slogans))
-     (product :shorts size (color-mix-50-50 main-color))
-     (product :thongs size (color-mix-50-50 main-color))]))
+    [(tshirt size (color-mix main-color 0.2) (rand-nth slogans))
+     (product :shorts size (color-mix main-color 0.2))
+     (product :thongs size (color-mix main-color 0.2))]))
 
 (defn format-time-for-mongo [date-time-obj]
   (tcoerce/to-date date-time-obj))
@@ -50,12 +60,11 @@
 ;;   (time/before? (time/plus start-date (time/days 60)) end-date))
 
 (let [start-date (time/date-time 2010 1 1)
-      end-date (time/date-time 2010 1 31)
+      end-date (time/date-time 2011 12 31)
       conn (mongo/make-connection "mydb")]
   (loop [this-date start-date]
     (when (time/before? this-date end-date)
       (let [norders (rand-int 9)]
-        (println "inserting " norders " orders")
         (dotimes [n norders]
           (let [this-order (order-one-outfit this-date)]
             (mongo/with-mongo conn
